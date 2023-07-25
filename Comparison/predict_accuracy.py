@@ -17,19 +17,21 @@ svms = {llm: load(f"/Users/jinqigong/Desktop/Research/OpenAI Evals/Comparison/SV
 trees = {llm: load(f"/Users/jinqigong/Desktop/Research/OpenAI Evals/Comparison/DTs/tree_{llm}.joblib") for llm in llm_columns}
 rfs = {llm: load(f"/Users/jinqigong/Desktop/Research/OpenAI Evals/Comparison/RFs/rf_{llm}.joblib") for llm in llm_columns}
 gbs = {llm: load(f"/Users/jinqigong/Desktop/Research/OpenAI Evals/Comparison/GBs/gb_{llm}.joblib") for llm in llm_columns}
-
+mlps = {llm: load(f"/Users/jinqigong/Desktop/Research/OpenAI Evals/Comparison/MLPs/mlp_{llm}.joblib") for llm in llm_columns}
 
 # Make predictions on the test set
 svm_predictions = {llm: model.predict(X_test_imputed) for llm, model in svms.items()}
 tree_predictions = {llm: model.predict(X_test_imputed) for llm, model in trees.items()}
 rf_predictions = {llm: model.predict(X_test_imputed) for llm, model in rfs.items()}
 gb_predictions = {llm: model.predict(X_test_imputed) for llm, model in gbs.items()}
+mlp_predictions = {llm: model.predict(X_test_imputed) for llm, model in mlps.items()}
 
 # Compare the predictions of each pair of models for each test sample
 correct_counts_svm = 0
 correct_counts_tree = 0
 correct_counts_rf = 0
 correct_counts_gb = 0
+correct_counts_mlp = 0
 for i in range(X_test.shape[0]):
     for llm1, llm2 in combinations(llm_columns, 2):
         if (svm_predictions[llm1][i] > svm_predictions[llm2][i]) == (y_test[llm1].iloc[i] > y_test[llm2].iloc[i]):
@@ -40,16 +42,19 @@ for i in range(X_test.shape[0]):
             correct_counts_rf += 1
         if (gb_predictions[llm1][i] > gb_predictions[llm2][i]) == (y_test[llm1].iloc[i] > y_test[llm2].iloc[i]):
             correct_counts_gb += 1
-
+        if (mlp_predictions[llm1][i] > mlp_predictions[llm2][i]) == (y_test[llm1].iloc[i] > y_test[llm2].iloc[i]):
+            correct_counts_mlp += 1
+          
 # Calculate the accuracy
 total_counts = len(llm_columns) * (len(llm_columns) - 1) / 2 * X_test.shape[0]
 accuracy_svm = correct_counts_svm / total_counts
 accuracy_tree = correct_counts_tree / total_counts
 accuracy_rf = correct_counts_rf / total_counts
 accuracy_gb = correct_counts_gb / total_counts
-
+accuracy_mlp = correct_counts_mlp / total_counts
 
 print("SVM accuracy:", accuracy_svm)
 print("Decision Tree accuracy:", accuracy_tree)
 print("Random Forest accuracy:", accuracy_rf)
 print("Gradient Boosting accuracy:", accuracy_gb)
+print("MLP accuracy:", accuracy_mlp)
